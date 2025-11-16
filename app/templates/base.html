@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}">
 </head>
 
 <body>
@@ -35,7 +36,15 @@
                     <ul class="navbar-nav mr-auto">
                         {% if current_user.is_authenticated %}
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('main.home') }}">Trang chủ</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('student.list_students') }}">Quản lý Sinh viên</a></li>
+                            {% if current_user.role == 'admin' %}
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('student.list_students') }}">Quản lý Sinh viên</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('gpa.gpa_analysis') }}">Thống Kê</a></li>
+                            {% elif current_user.role == 'student' %}
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('student.view_my_info') }}">Thông tin cá nhân</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('student.view_my_grades') }}">Xem điểm</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('student.register_subjects', student_id=current_user.student.id) }}">Đăng ký môn học</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('gpa.my_gpa_analysis') }}">Thống kê cá nhân</a></li>
+                            {% endif %}
                         {% endif %}
                     </ul>
 
@@ -63,10 +72,12 @@
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="adminDropdown">
                                 <a class="dropdown-item" href="{{ url_for('account.user_list') }}">Quản lý Người dùng</a>
-                                <a class="dropdown-item" href="{{ url_for('class_admin.list_classes') }}">Quản lý Lớp học</a> 
+                                <a class="dropdown-item" href="{{ url_for('class_admin.list_classes') }}">Quản lý Lớp học</a>
+                                <a class="dropdown-item" href="{{ url_for('subject.list_subjects') }}">Quản lý Môn Học</a>
+                                <a class="dropdown-item" href="{{ url_for('grade.list_grades') }}">Quản lý Điểm</a>
                                 <a class="dropdown-item" href="{{ url_for('admin.create_announcement') }}">Tạo thông báo</a>
                                 <a class="dropdown-item" href="{{ url_for('admin.view_feedback') }}">Xem phản hồi</a>
-</div>
+                                </div>
                             </li>
                             {% endif %}
                         {% else %}

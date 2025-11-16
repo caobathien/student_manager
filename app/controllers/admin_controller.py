@@ -5,6 +5,8 @@ from app import db
 from app.decorators import admin_required
 from app.models.announcement import Announcement
 from app.models.feedback import Feedback
+from app.models.user import User
+from app.models.student import Student
 from app.forms import AnnouncementForm
 import secrets
 from werkzeug.utils import secure_filename
@@ -77,3 +79,38 @@ def delete_announcement(announcement_id):
     db.session.commit()
     flash('Thông báo đã được xóa thành công.', 'success')
     return redirect(url_for('main.home'))
+
+@admin_bp.route('/create_student_accounts')
+@login_required
+@admin_required
+def create_student_accounts():
+    """Tạo tài khoản cho tất cả sinh viên chưa có tài khoản."""
+    students_without_accounts = Student.query.filter(Student.user == None).all()
+    created_count = 0
+
+    for student in students_without_accounts:
+        # Tạo username là mã sinh viên, password mặc định là 123456
+        username = student.student_code
+        password = '123456'  # Mật khẩu mặc định là 123456
+
+        # Kiểm tra xem username đã tồn tại chưa
+        if User.query.filter_by(username=username).first():
+            continue  # Bỏ qua nếu đã có
+
+        # Tạo email giả (có thể thay đổi sau)
+        email = f"{username}@student.edu.vn"
+
+        # Tạo user mới
+        user = User(
+            username=username,
+            email=email,
+            password=password,
+            role='student',
+            student_id=student.id
+        )
+        db.session.add(user)
+        created_count += 1
+
+    db.session.commit()
+    flash(f'Đã tạo tài khoản cho {created_count} sinh viên.', 'success')
+    return redirect(url_for('account.user_list'))

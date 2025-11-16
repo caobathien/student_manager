@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-chart-bar"></i> Thống kê GPA cá nhân</h4>
+            </div>
+            <div class="card-body">
+                {% if stats %}
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ stats.total_subjects }}</h5>
+                                <p class="card-text">Tổng môn học</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ stats.completed_subjects }}</h5>
+                                <p class="card-text">Môn đã hoàn thành</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ stats.average_score }}</h5>
+                                <p class="card-text">Điểm trung bình</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ stats.gpa }}</h5>
+                                <p class="card-text">GPA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Biểu đồ -->
+                {% if stats.chart_data %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>So sánh GPA hiện tại và dự đoán</h5>
+                        <canvas id="gpaChart" data-current="{{ stats.chart_data.current_gpa }}" data-predicted="{{ stats.chart_data.predicted_gpa }}" data-risk-level="{{ stats.chart_data.risk_level }}" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Mức độ rủi ro</h5>
+                        <canvas id="riskChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const gpaCanvas = document.getElementById('gpaChart');
+                    const currentGpa = parseFloat(gpaCanvas.dataset.current);
+                    const predictedGpa = parseFloat(gpaCanvas.dataset.predicted);
+                    const riskLevel = gpaCanvas.dataset.riskLevel;
+
+                    // Biểu đồ cột so sánh GPA hiện tại và dự đoán
+                    const gpaCtx = gpaCanvas.getContext('2d');
+                    const gpaChart = new Chart(gpaCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['GPA Hiện tại', 'GPA Dự đoán'],
+                            datasets: [{
+                                label: 'GPA',
+                                data: [currentGpa, predictedGpa],
+                                backgroundColor: [
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)'
+                                ],
+                                borderColor: [
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(255, 206, 86, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 4.0
+                                }
+                            }
+                        }
+                    });
+
+                    // Biểu đồ tròn mức độ rủi ro
+                    const riskCtx = document.getElementById('riskChart').getContext('2d');
+                    const riskData = riskLevel === 'Cao' ? [70, 30] : [20, 80]; // Giả sử tỷ lệ rủi ro cao/thấp
+
+                    const riskChart = new Chart(riskCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Nguy cơ cao', 'Nguy cơ thấp'],
+                            datasets: [{
+                                data: riskData,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)'
+                                ],
+                                borderColor: [
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(75, 192, 192, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                }
+                            }
+                        }
+                    });
+                });
+                </script>
+                {% endif %}
+
+                {% if stats.grades %}
+                <h5>Chi tiết điểm các môn:</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Môn học</th>
+                                <th>Điểm giữa kì</th>
+                                <th>Điểm cuối kì</th>
+                                <th>Điểm trung bình</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade in stats.grades %}
+                            <tr>
+                                <td>{{ grade.subject.name }} ({{ grade.subject.code }})</td>
+                                <td>{{ grade.midterm }}</td>
+                                <td>{{ grade.final }}</td>
+                                <td><strong>{{ grade.average }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">Bạn chưa có điểm nào được hoàn thành.</p>
+                {% endif %}
+                {% else %}
+                <p class="text-center">Không tìm thấy thông tin sinh viên.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gpa_analysis.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title"><i class="fas fa-chart-bar mr-2"></i> Phân tích GPA Sinh viên</h1>
+        <a href="{{ url_for('student.list_students') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.total_students }}</h3>
+                    <p>Tổng số sinh viên</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.average_gpa }}</h3>
+                    <p>GPA trung bình</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.min_gpa }}</h3>
+                    <p>GPA thấp nhất</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.max_gpa }}</h3>
+                    <p>GPA cao nhất</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chọn loại biểu đồ -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-cogs mr-2"></i> Chọn loại biểu đồ hiển thị</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="showBarChart" checked>
+                        <label class="form-check-label" for="showBarChart">
+                            <i class="fas fa-chart-bar mr-1"></i> Biểu đồ cột (Phân phối GPA)
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="showLineChart" checked>
+                        <label class="form-check-label" for="showLineChart">
+                            <i class="fas fa-chart-line mr-1"></i> Biểu đồ đường (GPA theo lớp)
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="showPieChart" checked>
+                        <label class="form-check-label" for="showPieChart">
+                            <i class="fas fa-chart-pie mr-1"></i> Biểu đồ tròn (Tỷ lệ rủi ro)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ -->
+    <div class="row">
+        <!-- Biểu đồ cột phân phối GPA -->
+        <div class="col-lg-6 mb-4 chart-container" id="barChartContainer">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar mr-2"></i> Phân phối GPA</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="gpaDistributionChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ đường GPA trung bình theo lớp -->
+        <div class="col-lg-6 mb-4 chart-container" id="lineChartContainer">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line mr-2"></i> GPA Trung bình theo Lớp</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="gpaByClassChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ tròn tỷ lệ rủi ro -->
+        <div class="col-lg-6 mb-4 chart-container" id="pieChartContainer">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie mr-2"></i> Tỷ lệ Rủi ro Học tập</h5>
+                    <div class="mt-2">
+                        <select id="classFilter" class="form-control form-control-sm">
+                            <option value="all">Tất cả lớp</option>
+                            {% for class_name in avg_gpa_by_class.keys() %}
+                            <option value="{{ class_name }}">{{ class_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="riskChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dữ liệu phân phối GPA
+    const distributionLabels = {{ distribution.keys() | list | tojson }};
+    const distributionData = {{ distribution.values() | list | tojson }};
+
+    // Dữ liệu GPA trung bình theo lớp
+    const classLabels = {{ avg_gpa_by_class.keys() | list | tojson }};
+    const classData = {{ avg_gpa_by_class.values() | list | tojson }};
+
+    // Dữ liệu rủi ro theo lớp
+    const classRiskData = {{ risk_by_class | tojson }};
+    let currentRiskData = classRiskData['all'] || { high_risk: 0, low_risk: 0 };
+
+    let barChart, lineChart, pieChart;
+
+    // Hàm tạo biểu đồ cột
+    function createBarChart() {
+        const ctx1 = document.getElementById('gpaDistributionChart').getContext('2d');
+        barChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: distributionLabels,
+                datasets: [{
+                    label: 'Số lượng sinh viên',
+                    data: distributionData,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 205, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 205, 86, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Hàm tạo biểu đồ đường
+    function createLineChart() {
+        const ctx2 = document.getElementById('gpaByClassChart').getContext('2d');
+        lineChart = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: classLabels,
+                datasets: [{
+                    label: 'GPA Trung bình',
+                    data: classData,
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    tension: 0.1,
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 4.0
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Hàm tạo biểu đồ tròn
+    function createPieChart() {
+        const ctx3 = document.getElementById('riskChart').getContext('2d');
+        pieChart = new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: ['Nguy cơ cao', 'Nguy cơ thấp'],
+                datasets: [{
+                    data: [currentRiskData.high_risk || 0, currentRiskData.low_risk || 0],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(75, 192, 192, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Hàm cập nhật biểu đồ tròn
+    function updatePieChart(selectedClass) {
+        currentRiskData = classRiskData[selectedClass] || { high_risk: 0, low_risk: 0 };
+        if (pieChart) {
+            pieChart.data.datasets[0].data = [currentRiskData.high_risk || 0, currentRiskData.low_risk || 0];
+            pieChart.update();
+        }
+    }
+
+    // Tạo biểu đồ ban đầu
+    createBarChart();
+    createLineChart();
+    createPieChart();
+
+    // Xử lý sự kiện checkbox
+    document.getElementById('showBarChart').addEventListener('change', function() {
+        const container = document.getElementById('barChartContainer');
+        if (this.checked) {
+            container.style.display = 'block';
+            if (!barChart) createBarChart();
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    document.getElementById('showLineChart').addEventListener('change', function() {
+        const container = document.getElementById('lineChartContainer');
+        if (this.checked) {
+            container.style.display = 'block';
+            if (!lineChart) createLineChart();
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    document.getElementById('showPieChart').addEventListener('change', function() {
+        const container = document.getElementById('pieChartContainer');
+        if (this.checked) {
+            container.style.display = 'block';
+            if (!pieChart) createPieChart();
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    // Xử lý sự kiện chọn lớp
+    document.getElementById('classFilter').addEventListener('change', function() {
+        const selectedClass = this.value;
+        updatePieChart(selectedClass);
+    });
+});
+</script>
+
+{% endblock %}

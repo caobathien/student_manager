@@ -2,10 +2,14 @@ import os
 from flask import Blueprint, render_template, session, url_for, flash, redirect, request
 from app import db
 from app.models.student import Student
-from app.models.class_model import Class 
-from app.forms import StudentForm, SearchStudentForm 
-from flask_login import login_required
-from app.decorators import admin_required
+from app.models.class_model import Class
+from app.models.grade import Grade
+from app.models.user import User
+from app.models.subject import Subject
+from app.models.student_subject import StudentSubject
+from app.forms import StudentForm, SearchStudentForm, SubjectRegistrationForm
+from flask_login import login_required, current_user
+from app.decorators import admin_required, student_required
 from sqlalchemy import or_ 
 from flask import make_response
 import io
@@ -77,8 +81,12 @@ def list_students():
 def add_student():
     """Thêm một sinh viên mới."""
     form = StudentForm()
+    # Populate choices for class_obj
+    classes = Class.query.order_by(Class.name).all()
+    form.class_obj.choices = [(c.id, c.name) for c in classes]
+
     # Kiểm tra xem có lớp nào chưa, nếu chưa thì không cho thêm SV
-    if not Class.query.first():
+    if not classes:
          flash('Chưa có lớp học nào được tạo. Vui lòng tạo lớp trước khi thêm sinh viên.', 'warning')
          return redirect(url_for('class_admin.list_classes')) # Chuyển đến trang quản lý lớp
 
@@ -88,9 +96,9 @@ def add_student():
             full_name=form.full_name.data,
             date_of_birth=form.date_of_birth.data,
             gender=form.gender.data,
-            # Lấy class_id từ đối tượng Class được chọn trong dropdown
-            class_id=form.class_obj.data.id,
-            gpa=form.gpa.data
+            # Lấy class_id từ form
+            class_id=form.class_obj.data,
+            gpa=0.0  # GPA sẽ được tính từ điểm các môn
         )
         db.session.add(student)
         db.session.commit()
@@ -106,18 +114,22 @@ def update_student(student_id):
     student = Student.query.get_or_404(student_id)
     form = StudentForm(obj=student)
 
+    # Populate choices for class_obj
+    classes = Class.query.order_by(Class.name).all()
+    form.class_obj.choices = [(c.id, c.name) for c in classes]
+
     # Gán sẵn lớp hiện tại cho dropdown khi GET request
     if request.method == 'GET':
-        form.class_obj.data = student.class_rel
+        form.class_obj.data = str(student.class_id)
 
     if form.validate_on_submit():
         student.student_code = form.student_code.data
         student.full_name = form.full_name.data
         student.date_of_birth = form.date_of_birth.data
         student.gender = form.gender.data
-        # Lấy class_id từ đối tượng Class được chọn trong dropdown
-        student.class_id = form.class_obj.data.id
-        student.gpa = form.gpa.data
+        # Lấy class_id từ form
+        student.class_id = form.class_obj.data
+        # GPA sẽ được tính từ điểm các môn
         db.session.commit()
         flash('Thông tin sinh viên đã được cập nhật!', 'success')
         return redirect(url_for('student.list_students'))
@@ -130,9 +142,13 @@ def update_student(student_id):
 def delete_student(student_id):
     """Xóa sinh viên."""
     student = Student.query.get_or_404(student_id)
+    # Xóa tài khoản người dùng liên kết nếu có
+    user = User.query.filter_by(student_id=student.id).first()
+    if user:
+        db.session.delete(user)
     db.session.delete(student)
     db.session.commit()
-    flash('Sinh viên đã được xóa!', 'success')
+    flash('Sinh viên và tài khoản liên kết đã được xóa!', 'success')
     return redirect(url_for('student.list_students'))
 
 @student_bp.route("/students/export/<file_type>") # Route mới nhận file_type
@@ -257,7 +273,11 @@ def allowed_file(filename):
 
 
 @student_bp.route('/students/import', methods=['GET', 'POST'])
+@login_required
+@admin_required
 def import_students():
+    from app.forms import ImportStudentForm
+    form = ImportStudentForm()
     if request.method == 'POST':
 
         # === Nút XEM TRƯỚC ===
@@ -265,7 +285,7 @@ def import_students():
             file = request.files.get('file')
             if not file or file.filename == '':
                 flash('⚠️ Vui lòng chọn file!', 'warning')
-                return redirect(request.url)
+                return render_template('import_students.html', form=form)
 
             if allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -284,21 +304,21 @@ def import_students():
 
                     # Xem trước 5 dòng đầu tiên
                     preview_data = df.head(5).to_html(classes="table table-bordered table-striped table-sm", index=False)
-                    return render_template('import_students.html', preview=preview_data)
+                    return render_template('import_students.html', preview=preview_data, form=form)
 
                 except Exception as e:
                     flash(f'❌ Lỗi khi đọc file: {e}', 'danger')
-                    return redirect(request.url)
+                    return render_template('import_students.html', form=form)
             else:
                 flash('❌ Chỉ hỗ trợ file .xlsx hoặc .csv!', 'danger')
-                return redirect(request.url)
+                return render_template('import_students.html', form=form)
 
         # === Nút XÁC NHẬN NHẬP ===
         elif 'confirm' in request.form:
             filepath = session.get('import_file')
             if not filepath or not os.path.exists(filepath):
                 flash('❌ Không tìm thấy file để nhập. Vui lòng tải lại!', 'danger')
-                return redirect(request.url)
+                return render_template('import_students.html', form=form)
 
             try:
                 # Đọc lại file
@@ -365,7 +385,59 @@ def import_students():
             except Exception as e:
                 db.session.rollback()
                 flash(f'❌ Lỗi khi xử lý file: {e}', 'danger')
-                return redirect(request.url)
+                return render_template('import_students.html', form=form)
 
     # GET request hoặc render lại
-    return render_template('import_students.html')
+    return render_template('import_students.html', form=form)
+
+@student_bp.route('/student/<int:student_id>/register_subjects', methods=['GET', 'POST'])
+@login_required
+def register_subjects(student_id):
+    """Đăng ký môn học cho sinh viên."""
+    student = Student.query.get_or_404(student_id)
+    form = SubjectRegistrationForm()
+
+    # Lấy danh sách môn học chưa đăng ký
+    registered_subject_ids = [ss.subject_id for ss in StudentSubject.query.filter_by(student_id=student.id).all()]
+    subjects = Subject.query.filter(~Subject.id.in_(registered_subject_ids)).all()
+    form.subjects.choices = [(subj.id, f"{subj.code} - {subj.name}") for subj in subjects]
+
+    if form.validate_on_submit():
+        selected_subject_ids = form.subjects.data
+        # Đăng ký môn học cho sinh viên
+        for subject_id in selected_subject_ids:
+            # Kiểm tra nếu đã đăng ký rồi thì bỏ qua
+            existing = StudentSubject.query.filter_by(student_id=student.id, subject_id=subject_id).first()
+            if not existing:
+                student_subject = StudentSubject(student_id=student.id, subject_id=subject_id)
+                db.session.add(student_subject)
+        db.session.commit()
+        flash(f'Đã đăng ký {len(selected_subject_ids)} môn học cho sinh viên {student.full_name}!', 'success')
+        return redirect(url_for('student.list_students'))
+
+    return render_template('register_subjects.html', title='Đăng ký môn học', form=form, student=student)
+
+@student_bp.route('/my_info')
+@login_required
+@student_required
+def view_my_info():
+    """Sinh viên xem thông tin cá nhân và điểm số."""
+    # Chỉ cho phép xem thông tin của chính mình
+    if not current_user.student:
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('main.home'))
+    student = current_user.student
+    grades = Grade.query.filter_by(student_id=student.id).all()
+    return render_template('student_dashboard.html', title='Thông tin cá nhân', student=student, grades=grades)
+
+@student_bp.route('/my_grades')
+@login_required
+@student_required
+def view_my_grades():
+    """Sinh viên xem điểm của mình."""
+    # Chỉ cho phép xem điểm của chính mình
+    if not current_user.student:
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('main.home'))
+    grades = Grade.query.filter_by(student_id=current_user.student.id).all()
+    return render_template('student_grades.html', title='Điểm của tôi', grades=grades)

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, url_for, flash, redirect, request
 from app import db, bcrypt
 from app.models.user import User
+from app.models.student import Student
 from app.forms import RegistrationForm, LoginForm
 from flask_login import login_user, current_user, logout_user
 
@@ -26,7 +27,11 @@ def login():
         return redirect(url_for('main.home'))
     form = LoginForm()
     if form.validate_on_submit():
+        # Kiểm tra đăng nhập bằng email hoặc username (đối với sinh viên)
         user = User.query.filter_by(email=form.email.data).first()
+        if not user:
+            # Nếu không tìm thấy bằng email, thử tìm bằng username (đối với sinh viên)
+            user = User.query.filter_by(username=form.email.data).first()
         if user and user.verify_password(form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')

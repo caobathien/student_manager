@@ -13,6 +13,10 @@ def index():
 def students():
     return student_controller.list_students()
 
+@main.route('/my_info')
+def my_info():
+    return student_controller.view_my_info()
+
 @main.route('/students/add', methods=['GET', 'POST'])
 def add_student():
     return student_controller.add_student()
@@ -21,6 +25,6 @@ def add_student():
 def edit_student(student_id):
     return student_controller.edit_student(student_id)
 
-@main.route('/students/delete/<int:student_id>')
+@main.route('/students/delete/<int:student_id>', methods=['POST'])
 def delete_student(student_id):
     return student_controller.delete_student(student_id)

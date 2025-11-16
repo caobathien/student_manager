@@ -61,17 +61,7 @@
                     {% endif %}
                 </div>
 
-                <div class="form-group">
-                    {{ form.gpa.label(class="form-label") }}
-                    {% if form.gpa.errors %}
-                        {{ form.gpa(class="form-control is-invalid") }}
-                        <div class="invalid-feedback">
-                             {% for error in form.gpa.errors %}<span>{{ error }}</span>{% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.gpa(class="form-control") }}
-                    {% endif %}
-                </div>
+
 
             </fieldset>
 

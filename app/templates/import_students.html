@@ -4,6 +4,7 @@
     <h2 class="mb-4"><i class="fas fa-file-upload"></i> Nhập sinh viên từ file Excel</h2>
 
     <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
         {% if not preview %}
             <div class="form-group">
                 <label for="file">Chọn file Excel (.xlsx hoặc .csv):</label>

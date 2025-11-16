@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user"></i> Thông tin cá nhân</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Mã sinh viên:</strong> {{ student.student_code }}</p>
+                        <p><strong>Họ và tên:</strong> {{ student.full_name }}</p>
+                        <p><strong>Ngày sinh:</strong> {{ student.date_of_birth.strftime('%d/%m/%Y') if student.date_of_birth else 'N/A' }}</p>
+                        <p><strong>Giới tính:</strong> {{ student.gender }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Lớp:</strong> {{ student.class_rel.name if student.class_rel else 'N/A' }}</p>
+                        <p><strong>GPA:</strong> {{ student.gpa }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
