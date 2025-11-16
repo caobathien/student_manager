@@ -439,5 +439,12 @@ def view_my_grades():
     if not current_user.student:
         flash('Bạn không có quyền truy cập trang này.', 'danger')
         return redirect(url_for('main.home'))
-    grades = Grade.query.filter_by(student_id=current_user.student.id).all()
-    return render_template('student_grades.html', title='Điểm của tôi', grades=grades)
+    student = current_user.student
+    # Lấy tất cả môn học đã đăng ký
+    registered_subjects = StudentSubject.query.filter_by(student_id=student.id).all()
+    # Tạo danh sách môn học với điểm tương ứng
+    subject_grades = []
+    for reg in registered_subjects:
+        grade = Grade.query.filter_by(student_id=student.id, subject_id=reg.subject_id).first()
+        subject_grades.append((reg.subject, grade))
+    return render_template('student_grades.html', title='Điểm của tôi', subject_grades=subject_grades)

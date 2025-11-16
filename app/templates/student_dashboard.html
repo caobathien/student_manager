@@ -48,7 +48,7 @@
                     <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>Điểm số</h5>
                 </div>
                 <div class="card-body">
-                    {% if grades %}
+                    {% if student.registered_subjects %}
                         <table class="table table-sm">
                             <thead>
                                 <tr>
@@ -59,16 +59,17 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for grade in grades %}
+                                {% for reg in student.registered_subjects %}
+                                {% set grade = grades | selectattr('subject_id', 'equalto', reg.subject_id) | list | first %}
                                 <tr>
-                                    <td>{{ grade.subject.name }}</td>
-                                    <td>{{ grade.midterm_score or '-' }}</td>
-                                    <td>{{ grade.final_score or '-' }}</td>
+                                    <td>{{ reg.subject.name }}</td>
+                                    <td>{{ grade.midterm_score if grade and grade.midterm_score is not none else 0 }}</td>
+                                    <td>{{ grade.final_score if grade and grade.final_score is not none else 0 }}</td>
                                     <td>
-                                        {% if grade.midterm_score and grade.final_score %}
+                                        {% if grade and grade.midterm_score is not none and grade.final_score is not none %}
                                             {{ "%.2f"|format((grade.midterm_score + grade.final_score * 2) / 3) }}
                                         {% else %}
-                                            -
+                                            0.00
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -79,7 +80,7 @@
                             <strong>GPA tổng: {{ student.gpa }}</strong>
                         </div>
                     {% else %}
-                        <p class="text-muted">Chưa có điểm nào.</p>
+                        <p class="text-muted">Chưa đăng ký môn học nào.</p>
                     {% endif %}
                 </div>
             </div>

@@ -18,6 +18,5 @@ class Config:
     # Sử dụng os.path.join để đảm bảo tương thích trên các hệ điều hành
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
     #     'sqlite:///' + os.path.join(basedir, 'instance', 'students.db')
-    # DÒNG MỚI (dành cho MySQL)
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://caobathien:thien123@caobathien.mysql.pythonanywhere-services.com/caobathien$default'
     UPLOAD_FOLDER = os.path.join(basedir, 'app', 'static', 'uploads')
