@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-users"></i> Sinh viên trong môn: {{ subject.name }} ({{ subject.code }})</h4>
+                <a href="{{ url_for('subject.list_subjects') }}" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách môn học
+                </a>
+            </div>
+            <div class="card-body">
+                {% if students %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Mã SV</th>
+                                    <th>Họ và tên</th>
+                                    <th>Lớp</th>
+                                    <th>GPA</th>
+                                    <th>Điểm môn học</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>{{ student.student_code }}</td>
+                                    <td>{{ student.full_name }}</td>
+                                    <td>{{ student.class_rel.name if student.class_rel else 'N/A' }}</td>
+                                    <td>{{ student.gpa }}</td>
+                                    <td>
+                                        {% set grade = student.grades | selectattr('subject_id', 'equalto', subject.id) | first %}
+                                        {% if grade and grade.subject_score %}
+                                            {{ "%.2f"|format(grade.subject_score) }}
+                                        {% else %}
+                                            Chưa có điểm
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('subject_student.remove_student_from_subject', subject_id=subject.id, student_id=student.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa sinh viên này khỏi môn học? Điều này sẽ xóa cả điểm liên quan.')">
+                                                <i class="fas fa-user-times"></i> Xóa khỏi môn
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted">Chưa có sinh viên nào đăng ký môn học này.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

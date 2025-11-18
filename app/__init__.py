@@ -40,7 +40,9 @@ def create_app(config_class=Config):
     from app.controllers.subject_controller import subject_bp
     from app.controllers.gpa_controller import gpa_bp
     from app.controllers.grade_controller import grade_bp
+    from app.controllers.subject_student_controller import subject_student_bp
 
+    app.register_blueprint(subject_student_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp)
