@@ -44,3 +44,6 @@ git push -u origin main
 
 #push lên pythonanywhere.com dự án của tôi
 git clone https://github.com/caobathien/student_manager.git
+
+#câu lệnh upload code lên pythonanywhere.com
+git pull origin main

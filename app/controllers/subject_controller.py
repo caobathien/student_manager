@@ -53,10 +53,12 @@ def update_subject(subject_id):
 @login_required
 @admin_required
 def delete_subject(subject_id):
-    """Xóa môn học (chỉ khi không còn điểm)."""
+    """Xóa môn học (chỉ khi không còn điểm và không còn sinh viên đăng ký)."""
     subject = Subject.query.get_or_404(subject_id)
     if subject.grades:  # Kiểm tra xem môn học còn điểm không
         flash('Không thể xóa môn học này vì vẫn còn điểm của sinh viên.', 'danger')
+    elif subject.registered_students:  # Kiểm tra xem còn sinh viên đăng ký không
+        flash('Không thể xóa môn học này vì vẫn còn sinh viên đăng ký.', 'danger')
     else:
         db.session.delete(subject)
         db.session.commit()
