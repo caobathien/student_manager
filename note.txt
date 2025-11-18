@@ -47,3 +47,19 @@ git clone https://github.com/caobathien/student_manager.git
 
 #câu lệnh upload code lên pythonanywhere.com
 git pull origin main
+
+#nâng cấp tk trong database  pythonanywhere.com
+flask shell
+from app import db
+from app.models.user import User
+
+# 1. Tìm người dùng theo email
+user = User.query.filter_by(email='caobathien01112004@gmail.com').first()
+
+# 2. Kiểm tra và nâng cấp
+if user:
+    user.role = 'admin'  # Đổi vai trò thành admin
+    db.session.commit()  # Lưu vào database
+    print(f"Thành công! Tài khoản {user.username} đã là Admin.")
+else:
+    print("Không tìm thấy tài khoản này! Kiểm tra lại email.")
