@@ -49,12 +49,8 @@ class SearchStudentForm(FlaskForm):
 
 # --- FORM CHO ĐIỂM ---
 class GradeForm(FlaskForm):
-    student_id = SelectField('Sinh viên',
-                             choices=[],
-                             validators=[DataRequired(message="Vui lòng chọn sinh viên.")])
-    subject_id = SelectField('Môn học',
-                             choices=[],
-                             validators=[DataRequired(message="Vui lòng chọn môn học.")])
+    student_id = SelectField('Sinh viên', choices=[], validators=[DataRequired(message="Vui lòng chọn sinh viên.")])
+    subject_id = SelectField('Chọn môn học', coerce=int, choices=[], validators=[DataRequired(message="Vui lòng chọn môn học.")])
     midterm_score = FloatField('Điểm giữa kì', validators=[Optional(), NumberRange(min=0.0, max=10.0, message="Điểm phải từ 0.0 đến 10.0")])
     final_score = FloatField('Điểm cuối kì', validators=[Optional(), NumberRange(min=0.0, max=10.0, message="Điểm phải từ 0.0 đến 10.0")])
     submit = SubmitField('Lưu Điểm')
