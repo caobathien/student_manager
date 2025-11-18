@@ -168,12 +168,10 @@ class ClassForm(FlaskForm):
 
 # --- FORM CHO ĐĂNG KÝ MÔN HỌC ---
 class SubjectRegistrationForm(FlaskForm):
-    subjects = SelectMultipleField('Chọn môn học', choices=[], validators=[DataRequired(message="Vui lòng chọn ít nhất một môn học.")])
+    subjects = SelectMultipleField('Chọn môn học',coerce=int, choices=[], validators=[DataRequired(message="Vui lòng chọn ít nhất một môn học.")])
     submit = SubmitField('Đăng ký')
 
 # --- FORM CHO NHẬP SINH VIÊN ---
 class ImportStudentForm(FlaskForm):
     file = FileField('Chọn file', validators=[DataRequired()])
     submit = SubmitField('Nhập dữ liệu')
-
-# ... existing code ...
