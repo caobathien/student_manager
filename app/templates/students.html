@@ -80,7 +80,7 @@
                         <td>
                             <a href="{{ url_for('student.update_student', student_id=student.id) }}" class="btn btn-secondary btn-sm" title="Sửa thông tin"><i class="fas fa-edit"></i></a>
                             <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ student.id }}" title="Xóa sinh viên">
-                               <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash"></i>
                             </button>
                         </td>
                         {% endif %}
@@ -109,7 +109,7 @@
                         </div>
                     </div>
                     {% else %}
-                     <tr>
+                    <tr>
                         <td colspan="{{ 7 if current_user.role == 'admin' else 6 }}" class="text-center text-muted">Không tìm thấy sinh viên nào khớp hoặc chưa có sinh viên nào.</td>
                     </tr>
                     {% endfor %}

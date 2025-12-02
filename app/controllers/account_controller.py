@@ -8,7 +8,6 @@ from app.decorators import admin_required
 account_bp = Blueprint('account', __name__)
 
 # --- ROUTES CHO USER THÔNG THƯỜNG ---
-
 @account_bp.route('/account', methods=['GET', 'POST'])
 @login_required
 def my_account():
@@ -39,7 +38,6 @@ def my_account():
 
 
 # --- ROUTES CHO ADMIN ---
-
 @account_bp.route('/admin/users')
 @login_required
 @admin_required

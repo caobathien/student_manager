@@ -39,7 +39,6 @@ def login():
             return redirect(next_page) if next_page else redirect(url_for('main.home'))
         else:
             flash('Đăng nhập không thành công. Vui lòng kiểm tra email và mật khẩu.', 'danger')
-    # VÀ THAY ĐỔI DÒNG NÀY
     return render_template('auth/login.html', title='Đăng nhập', form=form)
 
 @auth_bp.route("/logout")
