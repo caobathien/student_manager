@@ -12,7 +12,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(60), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')
-    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=True)  # Liên kết với Student nếu là sinh viên
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=True)
 
     # Mối quan hệ: Một User có thể tạo nhiều Announcement và Feedback
     announcements = db.relationship('Announcement', backref='author', lazy=True)

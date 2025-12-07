@@ -18,7 +18,6 @@ def register():
         db.session.commit()
         flash('Tài khoản của bạn đã được tạo! Bây giờ bạn có thể đăng nhập.', 'success')
         return redirect(url_for('auth.login'))
-    # THAY ĐỔI DÒNG NÀY
     return render_template('auth/register.html', title='Đăng ký', form=form)
 
 @auth_bp.route("/login", methods=['GET', 'POST'])

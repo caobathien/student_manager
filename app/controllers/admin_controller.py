@@ -95,7 +95,7 @@ def create_student_accounts():
 
         # Kiểm tra xem username đã tồn tại chưa
         if User.query.filter_by(username=username).first():
-            continue  # Bỏ qua nếu đã có
+            continue
 
         # Tạo email giả (có thể thay đổi sau)
         email = f"{username}@student.edu.vn"

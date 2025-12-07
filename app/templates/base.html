@@ -39,11 +39,13 @@
                             {% if current_user.role == 'admin' %}
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('student.list_students') }}">Quản lý Sinh viên</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('gpa.gpa_analysis') }}">Thống Kê</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('ai_board.ai_dashboard_page') }}">AI Dashboard</a></li>
                             {% elif current_user.role == 'student' %}
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('student.view_my_info') }}">Thông tin cá nhân</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('student.view_my_grades') }}">Xem điểm</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('student.register_subjects', student_id=current_user.student.id) }}">Đăng ký môn học</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url_for('gpa.my_gpa_analysis') }}">Thống kê cá nhân</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('ai_board.ai_dashboard_page') }}">AI Dashboard</a></li>
                             {% endif %}
                         {% endif %}
                     </ul>

@@ -8,7 +8,7 @@ class Config:
     Lớp cấu hình cơ bản cho ứng dụng.
     """
     # Khóa bí mật để bảo vệ session và form
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'ban-nen-thay-doi-key-nay'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'nên thay đổi'
     
     # Cấu hình SQLAlchemy
     # Tắt tính năng theo dõi sự thay đổi không cần thiết để tiết kiệm tài nguyên

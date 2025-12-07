@@ -32,6 +32,7 @@ def create_app(config_class=Config):
 
     # Đăng ký Blueprints
     from app.controllers.main_controller import main_bp
+    from app.controllers.ai_board_controller import ai_board_bp
     from app.controllers.auth_controller import auth_bp
     from app.controllers.student_controller import student_bp
     from app.controllers.admin_controller import admin_bp
@@ -44,6 +45,7 @@ def create_app(config_class=Config):
 
     app.register_blueprint(subject_student_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(ai_board_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp)
     app.register_blueprint(admin_bp)
